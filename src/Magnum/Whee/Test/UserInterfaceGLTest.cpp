@@ -257,6 +257,9 @@ void UserInterfaceGLTest::setStyle() {
         StyleFeatures doFeatures() const override {
             return _supportedFeatures;
         }
+        BaseLayerSharedFlags doBaseLayerFlags() const override {
+            return BaseLayerSharedFlag::NoRoundedCorners;
+        }
         UnsignedInt doBaseLayerStyleUniformCount() const override { return 3; }
         UnsignedInt doBaseLayerStyleCount() const override { return 5; }
         UnsignedInt doBaseLayerDynamicStyleCount() const override { return 11; }
@@ -318,6 +321,7 @@ void UserInterfaceGLTest::setStyle() {
         CORRADE_COMPARE(ui.baseLayer().shared().styleUniformCount(), 3);
         CORRADE_COMPARE(ui.baseLayer().shared().styleCount(), 5);
         CORRADE_COMPARE(ui.baseLayer().shared().dynamicStyleCount(), 11);
+        CORRADE_COMPARE(ui.baseLayer().shared().flags(), BaseLayerSharedFlag::NoRoundedCorners);
     }
 
     if(data.expectedFeatures & StyleFeature::TextLayer) {
