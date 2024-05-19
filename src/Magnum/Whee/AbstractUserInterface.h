@@ -1543,10 +1543,9 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          *      to child nodes
          * -    Orders data attachments in each layer by draw order
          * -    Calls @ref AbstractLayer::update() with the ordered data
-         * -    Resets @ref pointerEventPressedNode(),
-         *      @ref pointerEventCapturedNode() or
-         *      @ref pointerEventHoveredNode() if the nodes no longer exist,
-         *      are not visible or have @ref NodeFlag::NoEvents or
+         * -    Resets @ref currentPressedNode(), @ref currentCapturedNode() or
+         *      @ref currentHoveredNode() if the nodes no longer exist, are not
+         *      visible or have @ref NodeFlag::NoEvents or
          *      @ref NodeFlag::Disabled set on them or their parents
          *
          * After calling this function, @ref state() is empty apart from
@@ -1618,8 +1617,8 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          *
          * Expects that the event is not accepted yet.
          * @see @ref PointerEvent::isAccepted(),
-         *      @ref PointerEvent::setAccepted(),
-         *      @ref pointerEventPressedNode(), @ref pointerEventCapturedNode()
+         *      @ref PointerEvent::setAccepted(), @ref currentPressedNode(),
+         *      @ref currentCapturedNode()
          */
         bool pointerPressEvent(const Vector2& globalPosition, PointerEvent& event);
 
@@ -1675,8 +1674,8 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          *
          * Expects that the event is not accepted yet.
          * @see @ref PointerEvent::isAccepted(),
-         *      @ref PointerEvent::setAccepted(),
-         *      @ref pointerEventPressedNode(), @ref pointerEventCapturedNode()
+         *      @ref PointerEvent::setAccepted(), @ref currentPressedNode(),
+         *      @ref currentCapturedNode()
          */
         bool pointerReleaseEvent(const Vector2& globalPosition, PointerEvent& event);
 
@@ -1757,9 +1756,8 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          *
          * Expects that the event is not accepted yet.
          * @see @ref PointerEvent::isAccepted(),
-         *      @ref PointerEvent::setAccepted(),
-         *      @ref pointerEventCapturedNode(),
-         *      @ref pointerEventHoveredNode()
+         *      @ref PointerEvent::setAccepted(), @ref currentCapturedNode(),
+         *      @ref currentHoveredNode()
          */
         bool pointerMoveEvent(const Vector2& globalPosition, PointerMoveEvent& event);
 
@@ -1795,7 +1793,7 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          * The returned handle may be invalid if the node or any of its parents
          * were removed and @ref clean() wasn't called since.
          */
-        NodeHandle pointerEventPressedNode() const;
+        NodeHandle currentPressedNode() const;
 
         /**
          * @brief Node captured by last pointer event
@@ -1819,7 +1817,7 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          * The returned handle may be invalid if the node or any of its parents
          * were removed and @ref clean() wasn't called since.
          */
-        NodeHandle pointerEventCapturedNode() const;
+        NodeHandle currentCapturedNode() const;
 
         /**
          * @brief Node hovered by last pointer event
@@ -1838,7 +1836,7 @@ class MAGNUM_WHEE_EXPORT AbstractUserInterface {
          * The returned handle may be invalid if the node or any of its parents
          * were removed and @ref clean() wasn't called since.
          */
-        NodeHandle pointerEventHoveredNode() const;
+        NodeHandle currentHoveredNode() const;
 
     private:
         /* Used by set*AnimatorInstance() */
