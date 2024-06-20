@@ -69,6 +69,7 @@ struct BaseLayerTest: TestSuite::Tester {
 
     void sharedDebugFlag();
     void sharedDebugFlags();
+    void sharedDebugFlagSupersets();
 
     void sharedConfigurationConstruct();
     void sharedConfigurationConstructSameStyleUniformCount();
@@ -363,6 +364,7 @@ BaseLayerTest::BaseLayerTest() {
 
               &BaseLayerTest::sharedDebugFlag,
               &BaseLayerTest::sharedDebugFlags,
+              &BaseLayerTest::sharedDebugFlagSupersets,
 
               &BaseLayerTest::sharedConfigurationConstruct,
               &BaseLayerTest::sharedConfigurationConstructSameStyleUniformCount,
@@ -779,6 +781,15 @@ void BaseLayerTest::sharedDebugFlags() {
     std::ostringstream out;
     Debug{&out} << (BaseLayer::Shared::Flag::BackgroundBlur|BaseLayer::Shared::Flag(0xa0)) << BaseLayer::Shared::Flags{};
     CORRADE_COMPARE(out.str(), "Whee::BaseLayer::Shared::Flag::BackgroundBlur|Whee::BaseLayer::Shared::Flag(0xa0) Whee::BaseLayer::Shared::Flags{}\n");
+}
+
+void BaseLayerTest::sharedDebugFlagSupersets() {
+    /* TextureMask is a superset of Textured, so only one should get printed */
+    {
+        std::ostringstream out;
+        Debug{&out} << (BaseLayer::Shared::Flag::Textured|BaseLayer::Shared::Flag::TextureMask);
+        CORRADE_COMPARE(out.str(), "Whee::BaseLayer::Shared::Flag::TextureMask\n");
+    }
 }
 
 void BaseLayerTest::sharedConfigurationConstruct() {
