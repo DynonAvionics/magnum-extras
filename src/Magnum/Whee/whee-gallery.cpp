@@ -32,7 +32,9 @@
 #include <Magnum/Animation/Easing.h>
 #include <Magnum/Math/Color.h>
 #include <Magnum/Math/TimeStl.h>
+#include <Magnum/DebugTools/FrameProfiler.h>
 #include <Magnum/GL/DefaultFramebuffer.h>
+#include <Magnum/GL/Extensions.h>
 #include <Magnum/GL/Framebuffer.h>
 #include <Magnum/GL/Renderer.h>
 #ifdef CORRADE_TARGET_EMSCRIPTEN
@@ -149,11 +151,17 @@ class WheeGallery: public Platform::Application {
         Containers::Optional<Whee::Button> _clickMe;
 
         Whee::AnimationHandle _inputCursorAnimation{};
+
+        DebugTools::FrameProfilerGL _profiler;
 };
 
 WheeGallery::WheeGallery(const Arguments& arguments): Platform::Application{arguments, NoCreate}, _ui{NoCreate} {
     Utility::Arguments args;
     args.addBooleanOption("subdivided-quads").setHelp("subdivided-quads", "enable BaseLayerSharedFlag::SubdividedQuads")
+        .addBooleanOption("profile").setHelp("profile", "enable frame profiling printed to the console")
+        #ifndef CORRADE_TARGET_EMSCRIPTEN
+        .addBooleanOption("no-vsync").setHelp("no-vsync", "disable VSync for frame profiling")
+        #endif
         .addSkippedPrefix("magnum", "engine-specific options")
         .parse(arguments.argc, arguments.argv);
 
@@ -161,6 +169,23 @@ WheeGallery::WheeGallery(const Arguments& arguments): Platform::Application{argu
        have a flickering window and console noise if --help is requested,
        parsing fails, etc. */
     create(Configuration{}.setTitle("Magnum::Whee Gallery"_s).setSize({900, 600}));
+
+    /* Set up the profiler, if enabled */
+    if(args.isSet("profile")) {
+        _profiler.setup(
+            DebugTools::FrameProfilerGL::Value::FrameTime|
+            DebugTools::FrameProfilerGL::Value::CpuDuration|(
+                #ifndef MAGNUM_TARGET_GLES
+                GL::Context::current().isExtensionSupported<GL::Extensions::ARB::timer_query>()
+                #elif !defined(MAGNUM_TARGET_WEBGL)
+                GL::Context::current().isExtensionSupported<GL::Extensions::EXT::disjoint_timer_query>()
+                #else
+                GL::Context::current().isExtensionSupported<GL::Extensions::EXT::disjoint_timer_query_webgl2>()
+                #endif
+                ?
+                    DebugTools::FrameProfilerGL::Value::GpuDuration : DebugTools::FrameProfilerGL::Values{}),
+            50);
+    } else _profiler.disable();
 
     // TODO uhhh this should be called create() instead, this is inconsistent
     _ui.setSize({900, 600}, Vector2{windowSize()}, framebufferSize());
@@ -350,6 +375,11 @@ WheeGallery::WheeGallery(const Arguments& arguments): Platform::Application{argu
     startTextInput(); // TODO AHHHHHHH
     #endif
 
+    #ifndef CORRADE_TARGET_EMSCRIPTEN
+    if(args.isSet("no-vsync"))
+        setSwapInterval(0);
+    #endif
+
     GL::Renderer::setClearColor(0x22272e_rgbf);
     GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
     GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::One, GL::Renderer::BlendFunction::OneMinusSourceAlpha);
@@ -418,14 +448,20 @@ void WheeGallery::popup() {
 void WheeGallery::drawEvent() {
     _ui.renderer().compositingFramebuffer().clear(GL::FramebufferClear::Color);
 
+    _profiler.beginFrame();
+
     _ui.advanceAnimations(now());
 
     _ui.draw();
 
+    _profiler.endFrame();
+
     GL::AbstractFramebuffer::blit(_ui.renderer().compositingFramebuffer(), GL::defaultFramebuffer, GL::defaultFramebuffer.viewport(), GL::FramebufferBlit::Color);
 
+    _profiler.printStatistics(50);
+
     swapBuffers();
-    if(_ui.state()) redraw();
+    if(_ui.state() || _profiler.isEnabled()) redraw();
 }
 
 void WheeGallery::mousePressEvent(MouseEvent& event) {
