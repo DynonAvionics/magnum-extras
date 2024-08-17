@@ -129,6 +129,7 @@ class WheeGallery: public Platform::Application {
         explicit WheeGallery(const Arguments& arguments);
 
     private:
+        void viewportEvent(ViewportEvent& event) override;
         void drawEvent() override;
         void mousePressEvent(MouseEvent& event) override;
         void mouseReleaseEvent(MouseEvent& event) override;
@@ -168,7 +169,10 @@ WheeGallery::WheeGallery(const Arguments& arguments): Platform::Application{argu
     /* Create a GL context and the UI after the arguments were parsed to not
        have a flickering window and console noise if --help is requested,
        parsing fails, etc. */
-    create(Configuration{}.setTitle("Magnum::Whee Gallery"_s).setSize({900, 600}));
+    create(Configuration{}
+        .setTitle("Magnum::Whee Gallery"_s)
+        .setSize({900, 600})
+        .setWindowFlags(Configuration::WindowFlag::Resizable));
 
     /* Set up the profiler, if enabled */
     if(args.isSet("profile")) {
@@ -188,7 +192,8 @@ WheeGallery::WheeGallery(const Arguments& arguments): Platform::Application{argu
     } else _profiler.disable();
 
     // TODO uhhh this should be called create() instead, this is inconsistent
-    _ui.setSize({900, 600}, Vector2{windowSize()}, framebufferSize());
+    // TODO er what's the er actual er equation
+    _ui.setSize(Vector2{windowSize()}/dpiScaling(), Vector2{windowSize()}, framebufferSize());
 
     /* Renderer with a compositing framebuffer enabled */
     _ui.setRendererInstance(Containers::pointer<Whee::RendererGL>(Whee::RendererGL::Flag::CompositingFramebuffer));
@@ -443,6 +448,13 @@ void WheeGallery::popup() {
     _ui.eventLayer().onTapOrClick(more, [this]{
         _backgroundBlurBaseLayer->setBackgroundBlurPassCount(_backgroundBlurBaseLayer->backgroundBlurPassCount()*2);
     });
+}
+
+void WheeGallery::viewportEvent(ViewportEvent& event) {
+    GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
+
+    // TODO er what's the er actual er equation
+    _ui.setSize(Vector2{windowSize()}/dpiScaling(), Vector2{windowSize()}, framebufferSize());
 }
 
 void WheeGallery::drawEvent() {
